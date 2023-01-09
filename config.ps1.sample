@@ -1,0 +1,16 @@
+$numPartitions = 4 # default 4
+$subnetId = '/subscriptions/<subId>/resourceGroups/<resourceGroup>/providers/Microsoft.Network/virtualNetworks/<VNet>/subnets/anf-subnet'
+$ppgId = '/subscriptions/<subId>/resourceGroups/<resourceGroup>/providers/Microsoft.Compute/proximityPlacementGroups/<ppg>'
+$capacityPoolId = '/subscriptions/<subId>/resourceGroups/<resourceGroup>/providers/Microsoft.NetApp/netAppAccounts/<NetAppAccount>/capacityPools/<capacityPool>'
+$avgAppIdentifier = 'SH1' # default SH1
+$mountPoint = '-mnt00001' # default -mnt00001
+$deployForHSR = $false # default $false
+
+$sharedVolSizeGiBs = 1024 # default 1024, depends on memory size
+$sharedVolTPutMiBps = 128 # default 128
+
+$logVolSizeGiBs = 512 # default 512
+$logVolTPutMiBps = 250 # default 250
+
+$dataVolSizeGiBs = 1 * 1024 # default no less than 4TiB
+$dataVolTPutMiBps = 200 # default 400
