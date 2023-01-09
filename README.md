@@ -16,19 +16,20 @@ In the following scenario a multi-partition configuration is created with 4 data
 - AVG: SAP-HANA-SH1-shared-log
     - volume: SH1-shared
     - volume: SH1-log-mnt00001
-    **- volume: SH1-data-temp**
+    - volume: **SH1-data-temp**
 - AVG: SAP-HANA-SH1-part1-mnt00001
     - volume: SH1-data-part1-mnt00001
-    **- volume: SH1-log1-mnt00001-temp**
+    - volume: **SH1-log1-mnt00001-temp**
 - AVG: SAP-HANA-SH1-part2-mnt00001
     - volume: SH1-data-part2-mnt00001
-    **- volume: SH1-log2-mnt00001-temp**
+    - volume: **SH1-log2-mnt00001-temp**
 - AVG: SAP-HANA-SH1-part3-mnt00001
     - volume: SH1-data-part3-mnt00001
-    **- volume: SH1-log3-mnt00001-temp**
+    - volume: **SH1-log3-mnt00001-temp**
 - AVG: SAP-HANA-SH1-part4-mnt00001
     - volume: SH1-data-part4-mnt00001
-    **- volume: SH1-log4-mnt00001-temp**
+    - volume: **SH1-log4-mnt00001-temp**
+
 Note: **bold** volumes are to be deleted.
 
 ### Once the AVGs and child volumes are created successfully, the temporary volumes are deleted. The AVGs and remaining volumes are as follows:
