@@ -16,6 +16,11 @@ See [here](https://github.com/ANFTechTeam/ANF-HANA-multi-partition/blob/main/con
 ### Specify all arguments inline using Powershell parameters:
     .\ANF-HANA-multi-partition.ps1 -numPartitions 4 -subnetId <subnetResourceId> -ppgId <ppgResourceId> -capacityPoolId <capacityPoolResourceId> -avgAppIdentifier "SH1" -mountPoint "-mnt00001" -deployForHSR $false -sharedVolSizeGiBs 1024 -sharedVolTPutMiBps 128 -logVolSizeGiBs 512 -logVolTPutMiBps 250 -dataVolSizeGiBs 4096 -dataVolTPutMiBps 300 -cleanUponFail $true
 
+### Output Examples
+See [here](https://github.com/ANFTechTeam/ANF-HANA-multi-partition/blob/main/success_example.md) for an example of a successful run.
+
+See [here]()https://github.com/ANFTechTeam/ANF-HANA-multi-partition/blob/main/failure_example.md for an exmaple of a failed run.
+
 ## Order of Operations
 1. Pre-check validation
     1. verify capacity pool, proximity placement group, and delegated subnet exist
