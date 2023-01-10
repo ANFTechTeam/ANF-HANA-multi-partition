@@ -5,7 +5,7 @@
  .Description
   For larger HANA systems, such as the new 24TiB VMs, a single data volume does not deliver enough performance and capacity.
   For this scenario, SAP supports 'multiple partitions' (MP) where the SAP HANA database is striped across multiple volumes.
-  This script automates the deployment of multiple Azure NetApp Files application volumes groups (AVGs) to support SAP HANA databases
+  This script automates the deployment of multiple Azure NetApp Files application volume groups (AVGs) to support SAP HANA databases
   striped across one or more data volume partitions.
 
  .Parameter SID
