@@ -55,9 +55,11 @@
  .Parameter CleanUponFail
   This determines whether the script should cleanup if any errors are detected. If set to true and errors are detected, script will delete all resources it created.
 
- .Example
-   # todo
-   Show-Calendar
+ .EXAMPLE
+  ./ANF-HANA-multi-partition.ps1 -configFile ./config.ps1
+
+ .EXAMPLE
+  ./ANF-HANA-multi-partition.ps1 -numPartitions 4 -subnetId "subnetResourceId" -ppgId "ppgResourceId" -capacityPoolId "capacityPoolResourceId" -avgAppIdentifier "SH1" -mountPoint "-mnt00001" -deployForHSR $false -sharedVolSizeGiBs 1024 -sharedVolTPutMiBps 128 -logVolSizeGiBs 512 -logVolTPutMiBps 250 -dataVolSizeGiBs 4096 -dataVolTPutMiBps 300 -cleanUponFail $true
 #>
 
 param (
