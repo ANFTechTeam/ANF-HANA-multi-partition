@@ -14,3 +14,5 @@ $logVolTPutMiBps = 250 # default 250
 
 $dataVolSizeGiBs = 1 * 1024 # default no less than 4TiB
 $dataVolTPutMiBps = 200 # default 400
+
+$cleanUponFail = $true # default is true

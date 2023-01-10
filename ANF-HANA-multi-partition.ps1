@@ -52,6 +52,9 @@
  .Parameter ConfigFile
   This defines the path to the config file used to define the parameters above instead of specifing via command line arguments.
 
+ .Parameter CleanUponFail
+  This determines whether the script should cleanup if any errors are detected. If set to true and errors are detected, script will delete all resources it created.
+
  .Example
    # todo
    Show-Calendar
@@ -99,6 +102,9 @@ param (
   [Parameter(ParameterSetName = 'arg', Mandatory = $true, HelpMessage="The desired throughput of each data partition in mebibytes per second.")]
   [int]$dataVolTPutMiBps,
 
+  [Parameter(ParameterSetName = 'arg', Mandatory = $true, HelpMessage="This determines whether the script should cleanup if any errors are detected.")]
+  [bool]$cleanUponFail=$true,
+
   [Parameter(ParameterSetName = 'file', Mandatory = $true, HelpMessage="The config file used to define the script parameters. For exeample: ./config.ps1")]
   [string]$configFile
   )
@@ -112,6 +118,7 @@ try {
 }
 catch {
     Write-Host 'Specified subnet not found.'
+    Write-Host ""
     exit
 }
 
@@ -120,6 +127,7 @@ try {
 }
 catch {
     Write-Host 'Specified proximity placement group not found.'
+    Write-Host ""
     exit
 }
 
@@ -127,14 +135,49 @@ try {
     $capacityPoolDetails = Get-AzNetAppFilesPool -ResourceId $capacityPoolId -ErrorAction Stop
 }
 catch {
-    Write-Host 'Specified capacity pool not found.'
+    Write-Host "Specified capacity pool not found."
+    Write-Host ""
     exit
 }
 
 if($capacityPoolDetails.QosType -ne 'Manual') {
     Write-Host "Specified capacity pool does not have the correct QoS type. Capacity pool QoS type must be 'Manual'."
+    Write-Host ""
     exit
 }
+
+$tempBufferTPutNeeded = 10 + (10 * $numPartitions)
+$totalTPutRequested = $sharedVolTPutMiBps + $logVolTPutMiBps + ($numPartitions * $dataVolTPutMiBps)
+$totalTPutNeeded = $tempBufferTPutNeeded + $totalTPutRequested
+$availablePoolTPut = $capacityPoolDetails.TotalThroughputMibps - $capacityPoolDetails.UtilizedThroughputMibps
+Write-Host ""
+Write-Host "Capacity pool throughput requested (MiB/s)                    : $totalTPutRequested"
+Write-Host "Capacity pool throughput needed for temporary volumes (MiB/s) : $tempBufferTPutNeeded"
+Write-Host "Total capacity pool throughput needed (MiB/s)                 : $totalTPutNeeded"
+Write-Host "Capacity Pool throughput available (MiB/s)                    : $availablePoolTPut"
+if($totalTPutNeeded -gt $availablePoolTPut) {
+  Write-Host ""
+  Write-Host "Specifed capacity pool does not have enough available throughput. Increase capacity pool available throughput."
+  Write-Host ""
+  exit
+}
+
+$tempBufferCapNeeded = 100 + (100 * $numPartitions)
+$totalCapRequested = $sharedVolSizeGiBs + $logVolSizeGiBs + ($numPartitions * $dataVolSizeGiBs)
+$totalCapNeeded = $tempBufferCapNeeded + $totalCapRequested
+$availablePoolCap = $capacityPoolDetails.Size/1024/1024/1024
+Write-Host ""
+Write-Host "Capacity pool capacity requested (GiB)                    : $totalCapRequested"
+Write-Host "Capacity pool capacity needed for temporary volumes (GiB) : $tempBufferCapNeeded"
+Write-Host "Total capacity pool capacity needed (GiB)                 : $totalCapNeeded"
+Write-Host "Capacity Pool capacity available (GiB)                    : $availablePoolCap"
+if($totalCapNeeded -gt $availablePoolCap) {
+  Write-Host ""
+  Write-Host "Specifed capacity pool does not have enough available capacity. Increase capacity pool capacity."
+  Write-Host ""
+  exit
+}
+
 
 if($deployForHSR -eq $true) {
   $prefix = 'HA-'
@@ -149,6 +192,7 @@ $resourceGroup = $capacityPoolId.split('/')[4]
 $netappAccount = $capacityPoolId.split('/')[8]
 $avgResourceIds = @()
 $deleteVolResourceIds = @()
+$dateStamp = Get-Date
 
 # Create base AVG which includes 'shared' and 'log' volumes
 $avgName = $prefix + 'SAP-HANA-' + $avgAppIdentifier + '-shared-log'
@@ -213,7 +257,7 @@ $restParams = @{
 }
 
 Write-Host ""
-Write-Host "Creating base application volume group containing 'shared' and 'log' volumes..."
+Write-Host "Creating base application volume group containing 'shared' and 'log' volumes: $avgName"
 Write-Host ""
 $null = Invoke-AzRestMethod @restParams
 
@@ -273,46 +317,85 @@ for ($partition = 1; $partition -le $numPartitions; $partition++) {
       }
     }'
     }
-    Write-Host "Creating data partition application volume group for partition"$partition"..."
-    Write-Host ""
+    Write-Host "Creating data partition application volume group for partition"$partition": "$avgName
     $null = Invoke-AzRestMethod @restParams
     # Add each log volume to deleted volumes array
     $logVolumeResourceId = $capacityPoolId + '/volumes/' + $logVolname + '-temp'
     $deleteVolResourceIds += $logVolumeResourceId
 }
 
-Write-Host "Sleeping for 5 minutes while application volume groups are completed..."
 Write-Host ""
-Start-Sleep -Seconds 300
+Write-Host "Sleeping for 3 minutes while application volume groups are created..."
+Write-Host ""
+Start-Sleep -Seconds 180
 
 Write-Host "Checking status of application volume groups..."
+Write-Host ""
 $allAvgSuccess = $false
-$totalMinutesElapsed = 0
-$targetCompletionTime = $numPartitions * 10
-while($allAvgSuccess -eq $false -and $totalMinutesElapsed -le $targetCompletionTime){
+$errorDetected = $false
+while($allAvgSuccess -eq $false -and $errorDetected -eq $false){
   $allAvgSuccess = $true
   foreach($avgResourceId in $avgResourceIds){
-    try {
-      $avgDetails = Get-AzNetAppFilesVolumeGroup -ResourceId $avgResourceId -ErrorAction Stop
+    $avgCreatedName = $avgResourceId.split('/')[10]
+    $successStatus = (Get-AzActivityLog -ResourceProvider Microsoft.NetApp -StartTime $dateStamp -WarningAction SilentlyContinue | Where-Object {$_.ResourceId -eq $avgResourceId -and $_.Status -eq "Succeeded"}).Status
+    $failedStatus = (Get-AzActivityLog -ResourceProvider Microsoft.NetApp -StartTime $dateStamp -WarningAction SilentlyContinue | Where-Object {$_.ResourceId -eq $avgResourceId -and $_.Status -eq "Failed"}).Status
+    if($successStatus -ne 'Succeeded') {
+      $successStatus = 'Pending...'
     }
-    catch {
-      # hide error output if volume group is not created yet
+    if($failedStatus -eq 'Failed') {
+      $successStatus = 'Failed'
     }
-    if($avgDetails.ProvisioningState -ne 'Succeeded'){
+    Write-Host "  Status of AVG creation for"$avgCreatedName": "$successStatus
+    if($failedStatus -eq 'Failed') {
+      $errorDetected = $true
+    }
+    if($successStatus -ne 'Succeeded'){
       $allAvgSuccess = $false
     }
   }
-  if($allAvgSuccess -eq $false){
-    Write-Host "  Application volume groups still creating, sleeping for 1 minute..."
+  if($allAvgSuccess -eq $false -and $errorDetected -eq $false){
+    Write-Host ""
+    Write-Host "Application volume groups still creating, sleeping for 1 minute..."
+    Write-Host ""
     Start-Sleep 60
-    $totalMinutesElapsed += 1
   }
 }
 
-if($totalMinutesElapsed -ge $targetCompletionTime) {
+if($errorDetected -eq $true) {
   Write-Host ""
   Write-Host "Problem creating one or more application volume groups."
-  exit
+  Write-Host "Check the activity log within the Azure portal for more details."
+  Write-Host ""
+  if($cleanUponFail -eq $true) {
+    Write-Host "Begining cleanup process..."
+    $avgDetails = $null
+    foreach($avgResourceId in $avgResourceIds) {
+      try {
+        Write-Host "Checking for application volume group with the following resource Id:"
+        Write-Host "  "$avgResourceId
+        Write-Host ""
+        $avgDetails = Get-AzNetAppFilesVolumeGroup -ResourceId $avgResourceId -ErrorAction Stop
+      }
+      catch {
+        Write-Host ""
+        Write-Host "Application volume group not found, nothing to clean up."
+        Write-Host ""
+      }
+      if($avgDetails) {
+        foreach($volume in $avgDetails.volumes){
+          Write-Host "Deleting volume:"$volume.Name
+          Write-Host ""
+          Remove-AzNetAppFilesVolume -ResourceId $volume.Id
+        }
+        Write-Host "Deleting application volume group with resource Id:"
+        Write-Host "  "$avgResourceId
+        Write-Host ""
+        Remove-AzNetAppFilesVolumeGroup -ResourceId $avgResourceId
+      }
+    }
+  }else {
+    exit
+  }
 }else {
   Write-Host ""
   Write-Host "All application volume groups created successfully!"
