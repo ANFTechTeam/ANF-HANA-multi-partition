@@ -1,3 +1,4 @@
+```
 .\ANF-HANA-multi-partition.ps1 -configFile ./config.ps1
 
 Creating base application volume group containing 'shared' and 'log' volumes: SAP-HANA-SL9-shared-log
@@ -109,3 +110,4 @@ Checking for application volume group with the following resource Id:
    /subscriptions/subid/resourceGroups/myResourceGroup/providers/Microsoft.NetApp/netappAccounts/myAccount/volumeGroups/SAP-HANA-SL9-part4-mnt00001
 
 Application volume group not found, nothing to clean up.
+```
