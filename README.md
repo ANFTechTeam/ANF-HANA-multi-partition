@@ -6,25 +6,25 @@ For larger HANA systems, such as the new 24TiB VMs, a single data volume does no
 
 ## Instructions
 
-There are two options when using this script:
+There are two ways to use this script:
 
 ### Specify all arguments within an external file such as 'config.ps1' and run the following command:
-    `./ANF-HANA-multi-partition.ps1 -configFile ./config.ps1
+    ./ANF-HANA-multi-partition.ps1 -configFile ./config.ps1
 
 ### Specify all arguments inline using Powershell parameters:
-    `.\ANF-HANA-multi-partition.ps1 -numPartitions 4 -subnetId <subnetResourceId> -ppgId <ppgResourceId> -capacityPoolId <capacityPoolResourceId> -avgAppIdentifier "SH1" -mountPoint "-mnt00001" -deployForHSR $false -sharedVolSizeGiBs 1024 -sharedVolTPutMiBps 128 -logVolSizeGiBs 512 -logVolTPutMiBps 250 -dataVolSizeGiBs 4096 -dataVolTPutMiBps 300 -cleanUponFail $true
+    .\ANF-HANA-multi-partition.ps1 -numPartitions 4 -subnetId <subnetResourceId> -ppgId <ppgResourceId> -capacityPoolId <capacityPoolResourceId> -avgAppIdentifier "SH1" -mountPoint "-mnt00001" -deployForHSR $false -sharedVolSizeGiBs 1024 -sharedVolTPutMiBps 128 -logVolSizeGiBs 512 -logVolTPutMiBps 250 -dataVolSizeGiBs 4096 -dataVolTPutMiBps 300 -cleanUponFail $true
 
 ## Order of Operations
 1. Pre-check validation
-    1. Verify capacity pool, proximity placement group, and delegated subnet exist
-    1. Verify available capacity pool throughput
-    1. Verify available capacity pool capacity
+    1. verify capacity pool, proximity placement group, and delegated subnet exist
+    1. verify capacity pool throughput available
+    1. verify capacity pool size
 1. Create base AVG which includes 'shared', 'log', and temporary 'data' volumes.
-1. Create additional AVGs which include 'data' and temporary 'log' volume.
+1. Create additional AVGs which include 'data' and temporary 'log' volume(s).
 1. Check that all resources were created successfully.
     1. Optionally, if any errors are encountered, the script will delete any resources that it did create successfully.
 1. Delete temporary 'data' and 'log' volumes.
-1. Display final state of application volume groups and child volumes
+1. Display final state of application volume groups and child volumes.
 
 ## Example
 In the following scenario a multi-partition configuration is created with 4 data partitions.
