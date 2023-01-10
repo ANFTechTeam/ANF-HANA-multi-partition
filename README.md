@@ -11,6 +11,8 @@ There are two ways to use this script:
 ### Specify all arguments within an external file such as 'config.ps1' and run the following command:
     ./ANF-HANA-multi-partition.ps1 -configFile ./config.ps1
 
+See [here](https://github.com/ANFTechTeam/ANF-HANA-multi-partition/blob/main/config.ps1.sample) for an example of the external config file.
+
 ### Specify all arguments inline using Powershell parameters:
     .\ANF-HANA-multi-partition.ps1 -numPartitions 4 -subnetId <subnetResourceId> -ppgId <ppgResourceId> -capacityPoolId <capacityPoolResourceId> -avgAppIdentifier "SH1" -mountPoint "-mnt00001" -deployForHSR $false -sharedVolSizeGiBs 1024 -sharedVolTPutMiBps 128 -logVolSizeGiBs 512 -logVolTPutMiBps 250 -dataVolSizeGiBs 4096 -dataVolTPutMiBps 300 -cleanUponFail $true
 
