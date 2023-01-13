@@ -148,7 +148,7 @@ if($capacityPoolDetails.QosType -ne 'Manual') {
     exit
 }
 
-$tempBufferTPutNeeded = 10 + (10 * $numPartitions)
+$tempBufferTPutNeeded = 1 + (1 * $numPartitions)
 $totalTPutRequested = $sharedVolTPutMiBps + $logVolTPutMiBps + ($numPartitions * $dataVolTPutMiBps)
 $totalTPutNeeded = $tempBufferTPutNeeded + $totalTPutRequested
 $availablePoolTPut = $capacityPoolDetails.TotalThroughputMibps - $capacityPoolDetails.UtilizedThroughputMibps
@@ -245,7 +245,7 @@ $restParams = @{
       "properties": {
         "creationToken": "' + $prefix + $avgAppIdentifier + '-data-temp",
         "serviceLevel": "' + $serviceLevel + '",
-        "throughputMibps": ' + 10 + ',
+        "throughputMibps": ' + 1 + ',
         "subnetId": "' + $subnetId + '",
         "usageThreshold": ' + 100*1024*1024*1024 + ',
         "volumeSpecName": "data",
@@ -307,7 +307,7 @@ for ($partition = 1; $partition -le $numPartitions; $partition++) {
             "properties": {
               "creationToken": "' + $logVolName + '-temp",
               "serviceLevel": "' + $serviceLevel + '",
-              "throughputMibps": ' + 10 + ',
+              "throughputMibps": ' + 1 + ',
               "subnetId": "' + $subnetId + '",
               "usageThreshold": ' + 100*1024*1024*1024 + ',
               "volumeSpecName": "log",
