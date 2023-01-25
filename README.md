@@ -19,7 +19,7 @@ See [here](https://github.com/ANFTechTeam/ANF-HANA-multi-partition/blob/main/con
 ### Output Examples
 See [here](https://github.com/ANFTechTeam/ANF-HANA-multi-partition/blob/main/success_example.md) for an example of a successful run.
 
-See [here]()https://github.com/ANFTechTeam/ANF-HANA-multi-partition/blob/main/failure_example.md for an exmaple of a failed run.
+See [here](https://github.com/ANFTechTeam/ANF-HANA-multi-partition/blob/main/failure_example.md) for an exmaple of a failed run.
 
 ## Order of Operations
 1. Pre-check validation
